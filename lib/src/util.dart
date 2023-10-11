@@ -15,14 +15,14 @@ extension RoomTypeToShortString on types.RoomType {
 }
 
 /// Fetches user from Firebase and returns a promise.
-Future<Map<String, dynamic>> fetchUser(
+Future<Map<String, dynamic>?> fetchUser(
   FirebaseFirestore instance,
   String userId,
   String usersCollectionName, {
   String? role,
 }) async {
   final doc = await instance.collection(usersCollectionName).doc(userId).get();
-
+  if(doc.data() == null) return null;
   final data = doc.data()!;
 
   data['createdAt'] = data['createdAt']?.millisecondsSinceEpoch;
@@ -42,6 +42,7 @@ Future<List<types.Room>> processRoomsQuery(
   QuerySnapshot<Map<String, dynamic>> query,
   String usersCollectionName,
 ) async {
+  print("firebasecore mari 1");
   final futures = query.docs.map(
     (doc) => processRoomDocument(
       doc,
@@ -72,17 +73,30 @@ Future<types.Room> processRoomDocument(
   final type = data['type'] as String;
   final userIds = data['userIds'] as List<dynamic>;
   final userRoles = data['userRoles'] as Map<String, dynamic>?;
+  print("firebasecore mari 2");
 
-  final users = await Future.wait(
-    userIds.map(
-      (userId) => fetchUser(
+  var users = <Map<String, dynamic>>[];
+  for (String id in userIds) {
+    final user = await fetchUser(
         instance,
-        userId as String,
+        id as String,
         usersCollectionName,
-        role: userRoles?[userId] as String?,
-      ),
-    ),
-  );
+        role: userRoles?[id] as String?,
+      );
+      if(user != null)  users.add(user);
+  }
+  print("firebasecore mari 3");
+
+  // List<Map<String, dynamic>?> users = await Future.wait(
+  //   userIds.map(
+  //     (userId) => fetchUser(
+  //       instance,
+  //       userId as String,
+  //       usersCollectionName,
+  //       role: userRoles?[userId] as String?,
+  //     ),
+  //   ),
+  // );
 
   if (type == types.RoomType.direct.toShortString()) {
     try {
@@ -98,6 +112,8 @@ Future<types.Room> processRoomDocument(
       // Consider falling back to some default values.
     }
   }
+
+  print("firebasecore mari 4");
 
   data['imageUrl'] = imageUrl;
   data['name'] = name;

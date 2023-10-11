@@ -62,7 +62,7 @@ class FirebaseChatCore {
       firebaseUser!.uid,
       config.usersCollectionName,
       role: creatorRole.toShortString(),
-    );
+    ) ?? {};
 
     final roomUsers = [types.User.fromJson(currentUser)] + users;
 
@@ -155,7 +155,7 @@ class FirebaseChatCore {
       getFirebaseFirestore(),
       fu.uid,
       config.usersCollectionName,
-    );
+    ) ?? {};
 
     final users = [types.User.fromJson(currentUser), otherUser];
 
